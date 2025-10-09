@@ -1,0 +1,27 @@
+sftp
+*establish connection to server
+   $sftp jw@192.168.1.15 
+
+   -allows pwd, cd, ls, df, mkkdir, rename, rm, rmdir, chmod, chown, chgrp
+
+*transfer files
+   sftp>get test.txt (use -r for directories)
+  
+*save downloaded file under differnent name
+   sftp>get test.txt test2.txt
+
+*reget
+   -if file transfer fails use reget to resume
+   sftp>reget filename.txt
+
+*upload files to server
+   sftp> put newtest.txt (use -r for directories)
+
+*reput
+   -same as reget but for put
+
+*print current working directory
+   sftp>cd lpwd
+
+*list of all available sftp commands
+   sftp>help

@@ -1,0 +1,37 @@
+Syslinux Boot Process
+
+* Stage 1 part 1- load MBR
+	-bios loads 440 byte MBR boot code at start of disk (mbr.bin or gptmbr.bin) 
+	-mbr.bin found (/usr/lib/syslinux/bios/mbr.bin)
+	-gptmbr.bin found (/usr/lib/syslinux/bios/gptmbr.bin)
+
+* Stage 1 part 2- search active partition
+	-stage 1 MBR boot code looks for partition marked as active (boot flag set) (assume /boot)
+
+* Stage 2 part 1 - execute Volume Boot Record (VBR)
+	-stage 1 MBR boot code executes the Volume Boot Record (VBR) of the /boot partition
+	- for syslinux, the VBR boot code is the starting sector of /boot/syslinux/ldlinux.sys
+
+NOTE on VBR:
+	-1st sector of a partition
+	-MBR is 1st sector of a disk
+	-machine code for bootstrapping programs started in other parts of the device (usually the OS) 
+	-on non-partitioned storage devices, it's the 1st sector of the disk
+	-on partitioned storage devices, it's the 1st sector on each individual partition with 1st sector of disk being MBR, containing partition
+	 table
+
+* Stage 2 part 2- execute /boot/syslinux/ldlinux.sys
+	-VBR will load rest of /boot/syslinux/ldlinux.sys
+	-the sector location of /boot/syslinux/ldlinux.sys should not change or else syslinux will not boot
+
+* Stage 3- load /boot/syslinux/ldlinux.c32
+	-ldlinux.sys loads ldlinux.c32 (core module)
+	-contains rest of the core part of syslinux
+	- ldlinux.c32 should be present on every syslinux installation and match the version of ldlinux.sys, else syslinux will not boot
+
+* Stage 4- search and load config file
+	-once syslinux is fully loaded, it looks for /boot/syslinux/syslinux.cfg (or /boot/syslinux/extlinux.cfg) & loads if found
+	-if no config file is found, dropped to syslinux boot: prompt
+	-this step + rest of non-core parts of syslinux (/boot/syslinux/*.c32 modules excluding lib*.c32 & ldlinux.c32) require /boot/syslinux/lib*.c32 
+	 library modules to be present 
+	-*c32 file versions should all match

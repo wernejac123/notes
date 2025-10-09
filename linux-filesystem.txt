@@ -1,0 +1,102 @@
+Linux File System
+
+* /root: directory
+	-holds everything (all files & directories)
+
+* /bin: binaries
+	-essential user binaries
+	-must be present when system is mounted in single user-mode
+
+* /sbin: system administrator binaries
+	-similar to /bin (contains essential binaries)
+	-usually intended to be ran by root for system admin
+
+* /usr: user binaries & read-only data
+	-contains apps and files used by users as opposed to apps and binaries used by the system
+	-non-essential apps are located in /usr/bin
+	-non-essential system admin apps are located in /usr/sbin
+	-libraries for each are located in /usr/lib directory
+	-/usr/lib contains system libraries
+	-/usr/share contains documentation or common to all libraries
+	-/usr/local stores locally compiled apps (not installed by default on distro/packages specifically for that system
+
+* /dev: device files
+	-special files relating to devices (not actual files as we know them, but appear as files)
+	-also contains pseudo devices (virtual devices that don't actually correspond to hardware)
+	-/dev/null: files or strings can be sent to be destroyed (pipe output to /dev/null)
+	-/dev/zero: contains an infinite sequence of zeros
+	-/dev/random: contains an infinite sequence of random values
+
+* /boot: static boot files
+	-contains files needed to boot system (grub files, kernels, etc)
+	-boot loader's config isn't located here, usually in /etc
+
+* /cdrom: historical mount point for cdroms
+	-not in FHS standard
+	-still in some OS's like Ubuntu
+	-temp location for cdroms inserted in system
+	-standard location is /media
+
+* /etc: configuration files
+	-contains config files (that usually can be edited by hand in text editor)
+	-system wide config files
+	-(user specific config files are located in user's home directory)
+
+* /home: home folders
+	-contains a home folder for each user 
+	-contains user's data files & user specific config files
+	-each user only has write access to their own home folder (need elevated privileges (root) to modify other file's on system)
+
+* /lib; essential shared libraries
+	-libraries needed by essential binaries (/bin, /sbin)
+	-libraries needed by binaries in /usr/bin are in /usr/lib 
+	-counterpart /lib64 on 64-bit systems
+
+* /lost+found: recovered files
+	-each Linux file system has a lost+found directory
+	-if system crashes, file system check will be performed on next boot
+	-any corrupted files will be placed in lost+found directory
+
+* /media: removable media
+	-subdirectories where removable media devices inserted are mounted
+	-when cd is inserted, directory will automatically be created inside /media directory
+	-access contents of cd in that directory
+
+* /mnt: temporary mount points
+	-historically, /mnt is where system admins mounted temporary file systems while using them
+	-can be used for other file systems
+
+* /opt: optional packages
+	-/opt contains subdirectories for optional software packages
+	-commonly used by proprietary software that doesn't obey standard file system hierarchy
+	-storing 3rd party apps not available from distro's repos
+	-normal practice is to keep software code in /opt, then link binary file in /bin directory so that all users can run it
+	
+* /root: home directory for root
+
+* /srv: service data
+	-data for services provided by the system
+	- (good practice to store http server's website data in /srv)
+
+* /proc: kernel & process files
+	-similar to /dev (special files that represent system and process info)
+	-info about currently running processes & kernel parameters
+	-used by a number of tools to get system info (ex check processor info on Linux refer to /proc/cpuinfo,
+ 	 memory usage of system /proc/meminfo
+
+* /run: application run state files
+	-gives apps a standard place to store transient files (property of any element in system that is temporary) they require
+ 	 like sockets & process IDs (can't be stored in /tmp since they might be deleted)
+
+* /snap: storage for snap packages
+	-Ubuntu uses this
+	-most other distros don't have this
+
+* /tmp: temporary files
+	-apps store tmp files here
+	-generally deleted when restarted
+	-can be deleted at any time by utilities (like systemd-tmpfiles)
+
+* /var: variable data files
+	-where writable counterpart to /usr is located (/usr is read-only) 
+	-log files and everything else that would normally be written to /usr are written to /var during normal operation

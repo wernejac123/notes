@@ -1,0 +1,179 @@
+ZFS FIlesystem (RAID & RAIDZ)
+
+* Features
+   Pooled storage, copy-on-write, snapshots, data integrity verification & automatic repair, RAID-Z, max 16 Exobytes file size,
+   maximum 256 quadrillion Zetabytes storage
+
+* Pooled storage
+   -ZFS combines features of a file system & a volume manager
+
+   -can create a filesystem than spans across a series of drives (or a pool)
+
+    ------ ------ ------      ------- ----- ------     
+   |      |      |      |    |      |      |      |
+   | disk | disk | disk |    | disk | disk | disk |
+   |______|______|______|    |______|______|______| 
+      |      |       |           |      |      |
+     -------------------      ____________________
+    |                   |    |                    |
+    |       UDEV        |    |        UDEV        |
+    | __________________|    |____________________|
+              |                         |  
+      ____________________________________________
+    |                                             |
+    |                ZFS POOL                     |
+    |_____________________________________________|
+               |                       |
+      __________________ _________________________
+     |                  |                         |
+     | file system      |         ZVOL            |
+     |__________________|_________________________|
+
+* Copy-on-write
+   -on most filesystems, when data is overwritten, its lost forever
+   
+   -on zfs, the new info is written top a different block
+   -when write is complete, filesystem's medata is updated to point to new info 
+   -if system crashes during the write, the old data is preserved. no need to fsck after a system crash
+  
+* Snapshots
+   -ZFS uses snapshots to track changes in filesystem & live system contains changes made since the snapshot was taken
+   -as new data is written to live filesystem, new blocks are allocted to store this data
+   -designed to track changes to files, but not the addition & creation of files
+   -can rollback live system to a previous snapshot (all changes made since snapshot will be lost)
+   
+* Data integrity verification & automatic repair
+   -whenever new dadta is written to zfs, it creates a checksum. when data is read, the checksum is verified. if the checksum doesn't 
+      match, zfs knows an error happened. zfs will auotmatically attempt to correct the error.
+
+*RAID-Z
+   -zfs ha sits own implementation of RAID
+   -RAID-Z is a variant of RAID-5
+   -designed to overcome RAID-5's write hole error "in which the data & parity information become inconsistent after an unexpected restart.
+
+   -parity: parity computations used in RAID drive arrays for fault tolerance by alculaating teh data in 2 drives & storing the result on the 3rd.
+      After a failed drive is replaced, the RAID controller rebuilds the lost data from the other 2 drives. RAID filesystems often have a "hot" spare 
+      drive ready & waiting to replace a drive that fails.
+
+* RAID-Z levels
+   -RAIDZ-1: minimum # of drives for RAIDZ1 is 2 (best practice use "power of two plus parity")
+
+      Ex:
+         three(2+1), five(3+2), or 9(8+1) disks
+    -RAIDZ-2 & RAIDZ-3
+      RAIDZ2: should use four(2+2), six(4+2), ten(8+2) or eighteen(16+2) drives
+      
+      RAIDZ-3: five(2+3), eleven(8+3), or nineteen(16+3) disks
+
+   1) filesystem: a directory tree
+   2) volume (zvol): a volume represented as a block device
+   3) snapshot: snapshot of a filesystem
+   4) bookmark: A snapshot that does not hold data - used for incremental reprication
+   
+   -RAIDZ-2 requires at least 2 drives for storage & 2 for parity
+   -RAIDZ-3 requires at least 2 drives for storage & 3 for parity
+
+   -when drives are added to the RAIDZ pools, have to be added in multiples of 2
+
+ * Huge storage potential
+    -zfs creators decided to use 128 bit 
+    -offering 16 billion billion times the capicity of 32 or 64 bit systems
+
+* RAID & RAIDZ
+   -only minor difference between them
+   -functionally identical
+
+   -uses smaller RAIDS in partitions called UDEVS (virtual devices)
+   -joining multiple UDEVS makes a zpool
+
+   RAID0: also called striping
+      -spreads across multiple drives to get the added speed of them all reading & writing together, best performing, most space, efficient RAID level, but gives no
+      data security. In a drive failure, your whole storage pool could be lost
+ 
+      -zfs calls this a striped UDEV & has slightly more protection against silent data corruption than standard RAID0 due to its self-healing with checksums.
+
+      -not good for anyone not wanting big risk of losing all their data
+
+   RAID1:
+      -mirrors data between drives to essentially have a local backup of all your data
+
+      -in zfs this would be done by mirroring between UDEVS (collection of block devices or character devices - usually disks & drives - arranged in a particular topology   
+      -with zfs can mirror udevs as many times as you want to help protect against drive failure
+      -results in more wasted space for extra protection of an extra drive failure per mirror
+
+      -RAID0 is often used in conjunction with other RAID levels for boot drives as its space efficiency is worse than the parity RAID levels
+
+   RAID5:
+       -in zfs RAID5 is called RAIDZ-1  
+        RAID uses a prity block which gives it the ability to rebuild the lost data if a drive fails
+
+       -performs same data striping across drives for the added performance benefit of RAID0
+       -data striping: splits data logically across multiple physical storage devices
+       -used to increase the speed at which data can be read & written 
+       -not limited by the speed of a dedicated parity drive
+       *one of the most popular raid levels because it combines performance & data security
+       -RAID5 protects your data  against 1 drive failure, but if another goes out before rebuilding it the whole pool could be lost
+       -RAID-Z has benefit over RAID5 as it solved the write-hole phenomenon that usually plagues parity & striping raid levels
+
+   RAID6:
+      -simular to RAID5 but 2 drives for parity
+      -zfs equivalent to RAIDZ-2
+      -fairly safe RAID level since it can withstand 2 drive failures & still rebuild without losing pool
+      -RAIDZ-2 doesn't face write-hole phenomenon like RAID6
+
+   RAID10:
+      -is just mirroring & striping used together, then across the top, each mirrored pair gets striped across the whole set to create a single virtual drive
+      -has redundancy benefit of RAID1 & performance of RAID0
+      -the only way RAID10 lacks in is efficient use of its capacity. all data is stored twice, so half the effective capacity of RAID0
+      -RAID10 is simply striping mirrored UDEVS
+
+   RAID01: same as RAID10 but backwards & worse
+      -stripes data across pools of disks & then mirrors thos pools 
+      -performance is identical to RAID10 but chances of losing pool is higher
+      -increase chance of drive failure when rebuilding
+      -as you add more disks in RAID01 chance of losing your storage with 2 disk failures is never better than 50%
+      -most drives you add closer to 0%
+      *RAID01 is NEVER used over RAID10 anymore
+
+   RAID50:
+      -essentially several seperate RAID5 pools (with a drive for parity in each) & RAID0 added across the top of them, striping data across the pools.
+      -can withstand 1 drive failure for each of the RAID5 pools you have
+      -much higher redundancy than just RAID5, but less data effifient
+      -need a drive of parity per pool
+      -whole pool can still fail. failure if 2 drives from any of the RAID5's pools go down.
+      -decreases capacity since it uses extra parity blcks for each RAID5 pool
+      -in zfs this would be done by creating multiple volumes of RAIDZ-1 & striping them across each other
+
+   RAID60:
+      -simular to RAID50, uses multiple RAID6 pools striped across each other
+      -uses a lot of capacity. each RAID6 requires 2 drives worth of parity
+      -huge amount of redundancy
+      -2 drives can fail out of any of the RAID6 polls & the total pool can still be rebuilt
+      -as long as 3 drives from the same pool don't fail, the data can still be rebuilt
+      -huge insulation against drive failures
+      -in zfs RAID60 is equivalent of multiple RAIDZ-2 pools striped across each other
+      -very space inefficient option
+      -biggest issue some may experience with "stripe  & parity" raid levels (RAID5, RAID6, RAID50 & RAID60) is write-hole phenomenon
+      -if power is lost during a write, the data is corrupted & cannot be rebuilt
+      -RAIDZ doen't have this problem
+
+   *RAID & RAIDZ
+      -RAIDZ has slower reads for its checksum, limited to the speed of 1 drive
+      -slows down when reading chunks of data at random in RAIDZ
+      -RAID50 & RAID60 are tailored to enterprise envirornments where data integrity & performance are crucial. (servers, databases & virtualized envirornments)
+
+
+   *RAID50
+          ---------------------RAID0---------------
+          |                      |                 |       |
+     -----RAID5-----     ------RAID5---    ------RAID5----
+     |      |      |     |      |      |    |      |     |
+     disk1 disk2 disk3  disk4 disk5 disk6  disk7 disk8 disk9
+ 
+
+   *RAID60
+              ----------RAID0-----------
+              |                        |
+   ---------RAID6-------      -------RAID6-------
+   |       |     |     |      |     |     |     |
+   disk1 disk2 disk3 disk4  disk5 disk6 disk7 disk8  

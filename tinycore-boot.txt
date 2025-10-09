@@ -1,0 +1,72 @@
+* Boot Process
+	1) Load Linux Kernel (vmlinuz)
+	2) Load rootfs from initrd (core.gz)
+	3) Start kernel with parameters specified in bootloader command string 
+		I) Kernel starts Init process (/sbin/init -> /bin/busybox init)
+	
+* Init Process (/sbin/init -> /bin/busybox init)
+	1) Configuration from inittab (/etc/inittab)
+		I) defines SYSINIT location (/etc/init.d/rcS)
+		II) establishes TTY configuration 
+		III) defines script locations for restart, shutdown, etc 
+	2) starts SYSINIT (/etc/init.d/rcS)
+		I) mount /proc
+		II) mount /rootfs
+		II) mount fstab devices (/etc/fstab)
+		IV) starts tinycore config process (/etc/init.d/tc-config)
+
+* Tinycore config process (/etc/init.d/tc-config)
+	1) loads function library (/etc/init.d/tc-functions)
+	2) exports PATH environment variable
+	3) Builds modprobe blacklist config (/etc/modprobe.d/blacklist.conf)
+		(adds all modules listed in blacklist boot parameter)
+	4) populates /dev (/sbin/udev)
+	5) starts loop kernel module (/sbin/modprobe -> /bin/busybox modprobe)
+	6) creates compressed swap in RAM (/sbin/mkswap -> busybox -> mkswap)
+		(unless NOZSWAP  specified in boot parameters)
+	7) adds SCSI drives to fstab
+		(unless NOFSTAB specified in boot parameters) 
+	8) starts SYSLOG(/sbin/syslogd -> /bin/busybox syslogd)
+		(at location specified in RSYSLOG boot parameter)
+	9) exports LANG environmental variable
+	10) configures timezone as specified in TZ boot parameter (/etc/sysconfig/timezone)
+	11) configures Real-Time Clock (/sbin/hwclock -> /bin/busybox hwclock)
+		(unless NOUTC boot parameter is specified)
+	12) configures hostname (/etc/hostname)
+	13) configures Network Loopback (/sbin/ifconfig -> /bin/busybox ifconfig)
+	14) configures ATA over Ethernet 
+	15) create user name in USER boot parameter (/bin/adduser ->/bin/busybox adduser)
+		(default is 'tc')
+	16) create base directories for TCE applications 
+	17) loads remote tinycore extensions
+		I) TFTP URL defined in TFTPLIST boot parameter
+		II) HTTP URL defined in HTTPLIST boot parameter
+	18) mounts filesystems
+		1) NFS mount-point defined in NFSMOUNT boot parameter
+		II) Network Block Device mount-point defined in NBD boot parameter
+		III) TC Virtual Hard Drive defined in TCVD boot parameter
+	19) load LVM/RAID extensions specified in PRETCE boot parameter 
+	20) setup persistent home folder
+	21) setup persistent opt folder
+	22) enable laptop functionality if LAPTOP boot parameter is specified
+	23) disable swap file if NOSWAP boot parameter defined
+	24) use swap file as defined in SWAPFILE boot parameter
+	25) attempt restore from hibernation from file defined in RESTORE boot parameter
+	26) configure icon location or hide icon is NOICONS boot parameter is specified
+	27) load local tinycore extensions (/usr/bin/tce-setup)
+		I) process any .gzs files
+		II) process tcz initrd builtins
+		III) process regular tcz extensions
+		IV) process CD extensions 
+		V) process scm files
+	28) configure Key Mappings as defined in KEYMAP boot parameter
+		(default is US)
+	29) configure root & user passwords 
+	30) enable encryption of user store
+	31) configure xorg vesa video mode as defined in XVESSA boot variable
+	32) start DHCP process (/etc/init.d/dhcp.sh)
+	33) set time via Real-Time Clock (/etc/init.d/settime.sh)
+	34) start cron process (/etc/init.d/services/crond)
+	35) start Bootsync process (/opt/bootsync.sh)
+	36) Autologin as $USER if NOAUTOLOGIN boot parameter is not defined
+	37) pause completion of script execution is PAUSE boot parameter is defined 

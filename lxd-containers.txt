@@ -1,0 +1,118 @@
+* Install packages
+   lxd
+
+   NOTE:
+      brtfs requires brtfs-progs
+      ceph/cephfs ceph-common
+      lum lum2
+      zfs zfsutils-linux
+
+      NOTE: for zfs have to start module with:
+         sudo modprobe zfs
+         sudo lsmod zfs (confirm module is loaded)
+
+         auto load zfs module by:
+            $echo "zfs" >> /etc/modules
+            $sudo reboot
+
+* Basic setup
+   sudo lxd init (everything default except name)
+
+   sudo usermod -aG lxd jw
+   sudo lxc remote set-url images https://images.lxd.canonical.com
+
+* Confirm with
+   sudo lxc profile show default 
+
+* List storage pools
+   sudo lxc storage list OR
+   sudo lxc storage list (pool name)
+
+* Network info
+   sudo lxc network show lxdbr0 
+
+* Search for images
+   sudo lxc image list images: OR
+   sudo lxc image list images:|grep debian
+
+* Get info on images
+   sudo lxc image info images:debian/sid/cloud/amd64
+
+* See container list
+   sudo lxc list
+
+* create container
+   sudo lxc launch images:debian/12/cloud debian12 <-(name)
+
+   -creates a debian 12 container named "debian12"
+
+* Start container (if not running already) 
+   sudo lxc start (container name)
+
+* Gain shell access to container
+   sudo lxc exec debian12 bash
+
+   NOTE: to start container with login execute: 
+      sudo lxc console debian12 
+
+   NOTE: update container first (apt update && apt upgrade) to avoid errors & make it useable
+
+* Exit with
+   #exit (to exit from console ctrl+a q)
+
+* Info on container
+   sudo lxc info debian12 <-(name here)
+
+* Stop container
+   sudo lxc stop (container name) OR TO STOP ALL RUNNNING IN STORAGE POOL
+   sudo lxc stop (storage pool name)
+
+* Restart container
+   sudo lxc restart (container name)
+
+* Delete a container
+   sudo lxc delete (container name)
+
+* Using zfs pool
+   #zpool list
+   #zpool status (use this to find LXD image path)
+
+* Create lxc snapshot
+   sudo lxc snapshot debian12 debian12-1 (container name snapshot name)
+
+* List snapshots
+   sudo lxc list (container name)
+
+* See container at zfs level
+   sudo zfs list -rtall (pool storage name)
+
+   sudo zfs list -rtall techmint-pool/containers/debian12 
+
+   NAME					USED	Avail
+   techmint-pool/containers/debian12	200M	27.3
+
+* Restore from a snapshot
+   1) stop current running container
+      sudo lxc stop (container name)
+
+   2) restore
+      sudo lxc restore <container name> <snapshot name>
+
+   3) start container
+
+* Rename container
+   sudo lxc stop (container name)
+   sudo lxc move (old name) (new name)
+   sudo lxc start (container name)
+
+* Delete lxd snapshots
+   sudo lxc delete ubuntu18/usnap0
+
+* Copy file from container to system
+   sudo lxc file pull -r debian12-games/home/jw/games/ports/wump /home/jw (-r to copy directory) (copies wump to /home/jw)
+
+* Copy file from system to container
+   sudo lxc file push myfile.txt mycontainer/home/ubuntu (use -r for directory) 
+
+* Clone container
+   sudo lxc copy <source container> <destination container>

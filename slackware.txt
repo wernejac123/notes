@@ -1,0 +1,94 @@
+Slacxkware
+
+* Slackbuilds
+   -download source & slackbuild (reg user) (https:slackbuilds.org)
+   -extract 
+      move source into directory created by extracting slackbuild
+   -execute slackbuild
+      $sudo su
+      #./(the slackbuild) 
+   -install 
+      #installpkg /tmp/(file created)
+
+*Use generic kernel
+   $sudo -i
+   #cd /user/share/mkinitrd
+   #./mkinitrd_command_generator.sh
+   (run command it outputs)
+   #lilo
+   #init 6 
+
+* Build kernel + LILO (seems to break slackpkg on Slackware 15)
+   -copy current config to .config
+      $su -
+      #zcat /proc/config.gz > .config
+
+   -compile kernel + modules (Look at LFS documents for building and installing headers)
+      #make olddefconfig
+      #make menuconfig
+      (select save)
+      #make -j 2 bzImage
+      #make -j 2 modules
+      #make -j 2 modules_install
+
+   -copy kernel, System.map & config to /boot
+      #cp arch/x86/boot/bzImage /boot/vmlinuz-generic-5.15.174
+      #cp System.map /boot/System.map-generic-5.15.174
+      #cp .config /boot/config-generic-5.15.174
+
+   -delete old System.map & config (symbolic links?) from /boot
+      #cd /boot
+      #rm System.map
+      #rm config
+
+   -create new symbolic links in /boot
+      #ln -s System.map-generic-5.15.174 System.map
+      #ln -s config-generic-5.15.174 config
+
+    -update lilo config + lilo
+       #cd /etc
+       #vim lilo.conf
+
+       add:
+          image=/boot/vmlinuz-generic-5.15.174
+             root=/dev/vda1                     <--------    (did this in vm. usually /dev/sda1 on real hardware) 
+             label = "Linux 5.15.174"                    |
+             read-only                                   |
+                                                         |
+       #lilo       (run this to update lilo)             |
+       #init 6                                           |
+                                                         |
+       NOTE: changed other root= to this also-------------
+
+ * Slackbuilds method #2 (sbopkg)
+   #sbopkg
+   *click sync
+
+   *changelog -see cahnges made
+   *packages -see list of installed sbo packages OR remove them
+   *updates -update sbo packages
+   *browse -search for packages & add to queue
+   *search -same as browse but a single package search
+
+   -to install new package
+      1) add it to the queue
+      2) go to process 
+         click ok & then install
+         start
+      -clear the queue when done
+
+      *tested this with ranger (exit ranger with q like vim)
+      -under queue is an option to sort the queue ('sort')
+     -can save sbo queues 
+     -use 'Load' in queue to load a saved queue
+
+* Update Slackware
+   -documents say to blacklist kernel & sbo pkgs in /etc/slackpkg/blacklist (uncommment here)
+
+   #slackpkg update gpg
+   #slackpkg update
+   #slackpkg install-new  (will install everything selected)
+   #slackpkg upgrade-all
+   #slackpkg clean-system (remove anything not on standard Slackware install)
+
+   NOTE: if kernel is not blacklisted and it's updated, read screen & it'll say what commands to run)
