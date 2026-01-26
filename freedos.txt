@@ -1,0 +1,135 @@
+FreeDOS notes (and DOS proprietary software in FreeDOS)
+(INCOMPLETE!!!!)
+
+* load usb driver
+	USBHOSTS 
+	USBUHCIL /INDEX:0
+	USBDRIVE
+	USBDRIVE STATUS
+	E:
+
+	NOTE: usb drivers in FreeDOS don't always work on all computers
+
+*unload usb from memory
+	USBDRIVE U (not sure if this is necessary)
+	leave usb in drive and reboot before removing usb 
+
+* using opengem
+	SWSUBST O: c:\OPENGEM
+	CD O:
+	GEM.BAT
+
+	edit FDAUTO.BAT and add:
+        SWSUBST O: c:\OPENGEM 
+
+*installing as-easy-as (DOS proprietary spreadsheet software)
+	-expects it to be installed off floppies
+	A:
+	COPY ASA57.EXE C:\TMP (create this directory if it doesn't exist)
+	C:
+	CD TMP
+	UNZIP ASA57.EXE (run install)
+
+*creating FreeDOS bootable floppy
+	(with blank floppy in floppy drive)
+	FORMAT A:
+	SYS A:
+
+*list PCI devices
+	LISTPCI|LESS (assumes less is installed. less is on either the live disk or the bonus disk)
+
+*installing software off the live and bonus disk(s)
+	-put disk in drive (cd drive is usually D:)
+	FDIMPLES
+
+	-use TAB to move between sections
+	-hit enter on the box to the left to install everything in that section
+
+	NOTE: FDIMPLES also works on FreeDOS software .zip files
+		copied to c: in a directory (don't need disk in drive)
+
+	usuallly I reboot in between installing the live disk and the bonus one
+
+-the internel cd drives sometimes don't work in FreeDOS 
+-can use a Linux distro to copy the contents of a cd/floppy/usb/etc..  into the drive where
+	FreeDOS is installed
+
+*paintbrush 5 (DOS proprietary)
+	-if a floppy drive is not available for Paintbrush 5, can use Linux to 
+		copy the contents of a floppy image (.img) into the filesystem 
+		where FreeDOS is installed
+	-then from FreeDOS can use
+		SWSUBST A: C:\TMP\DISK1 (where DISK1 is the directory where 
+	the contents of the 1st floppy for paintbrush was extracted)
+		CD A:
+		copy contents of  A:\  to C:\TMP
+		-run install script (stop when it asks for the 2nd floppy)
+		-reboot and SWSUBST A: C:\TMP\DISK2
+		-go to the directory where paintbrush was installed 
+		-run the setup/install script again (will think the 2nd floppy is really a:)  
+		-select the option to select mouse driver and follow the diretcions
+
+	NOTE: the video driver is trial and error
+	if a video driver doesn't work reboot and repeat from:
+	SWSUBST A: C:\TMP\DISK2 step
+
+*installing vivicalc (DOS proprietary)
+	-copy VC.COM to C:\VISICALC (make directory if it doesn't exist)
+
+*using visicalc
+	/s storage menu
+	s save
+	l load
+	q quit
+	d delete
+
+*Abiltity 3 (suite)
+	extract to C:\ABILITY (no long names)
+
+*making files executable (.EXE .COM .BAT etc...) 
+	ATTRIB -R (file)
+
+*copying files vs directories
+	for files use COPY
+	for directories use XCOPY
+
+	use HELP and look at XCOPY for options to copy all
+	subdirectries (not empty) 
+
+*recombine files split with Linux 'split' command
+	c:\TEMP\COPY \B FILE.AA + FILE.AB .. FILE.ZIP
+
+	then use UNZIP to extract it 
+
+*mupdf (pdf reader)
+	UNZIP MUPDF -d C:\
+
+	edit FDAUTO.BAT
+	add:
+	alias mupdf=c:\fdos\mupdfbin.exe
+
+	NOTE: this was written for an older version of FreeDOS
+		-doesn't work well on computers with very low RAM
+		with large pdfs
+
+*pg (pager)
+	-view file  from terminal
+	pg FILE.TXT|less
+
+*tscheck (spell checker)
+	C:\FDOS\BIN\SPELLD3.DNY dictionary
+	C:\FDOS\BIN\SPELL.EXE executable
+
+	-install:
+	UNZIP TSCHECK.ZIP -D C:\
+
+	(I assume it works like UNIX spell program where if a word 
+	is missing, just add it to the idctionary)
+
+	(also written for older version of FreeDOS)
+
+	edit FDAUTO.BAT
+	alias spell=c:\fdos\bin\spell.exe
+
+	(read the documentation and modify this to include the 
+	dictionary file) 
