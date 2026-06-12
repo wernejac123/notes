@@ -1,0 +1,58 @@
+Debian Bookworm 32 bit debotstrap
+(For a Dell WYSE with 1G RAM and a 1Gb usb)
+
+#mkdir deb32
+#debootstrap --arch i386 bookworm deb32 http://deb.debian.org/debian/
+#mount proc deb32/proc -t proc
+#mount sysfs deb32/sys -t sysfs
+#mount devtmpfs deb32/dev -t devtmpfs 
+#chroot deb32
+#apt install locales
+#dpkg-reconfigure locales
+(set en_US.UTF-8 UTF-8)
+(set en_US.UTF-8)
+#dpkg-reconfigure tzdata
+(set US/Eastern)
+#apt install linux-image-686 liux-headers-686
+#apt install live-boot live-boot-initramfs-tools extlinux
+#apt install build-essential gdb strace valgrind python3
+#apt install lua5.4 man info
+#apt install bsdgames nethack-common moria ninvaders
+#apt install gpm sc gnuplot-nox gnuchess
+#apt install fbi dosfstools mtools
+#passwd (set to 'toor')
+#adduser guest (passwd: 'toor')
+#usermod -aG video,audio guest
+#update-initramfs -u
+#exit
+#umount deb32/dev
+#umount deb32/sys
+#umount deb32/proc
+#mksquashfs deb32 filesystem.squashfs -e boot
+#ls -lh (squashfs is 451MB)
+#fdisk -l
+#fdisk /dev/sdb
+n
+a
+p
+w
+#mkfs.ext4 /dev/sdb1
+#fsck /dev/sdb1
+#mount /dev/sdb1 /mnt
+#mkdir /mnt/live
+#cp -v *.squashfs /mnt/live
+#cp -rv deb32/boot /mnt
+#mkdir /mnt/boot/syslinux
+#nano syslinux.cfg
+
+DEFAULT linux
+LABEL linux
+ KERNEL /boot/vmlinuz-6.1.0-47-686
+ INITRD /boot/initrd.img-6.1.0-47-686
+ APPEND boot=live
+
+#cp -v deb32/usr/lib/syslinux/modules/bios/*.c32 /mnt/boot/syslinux
+#extlinux --install /mnt/boot/syslinux
+#umount /mnt
+#dd if=deb32/usr/libEXTLINUX/mbr.bin of=/dev/sdb bs=440 count=1
+
